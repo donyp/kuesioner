@@ -77,6 +77,18 @@ storage/uploads/      # foto (gitignored)
 - File foto diberi nama UUID, tanpa metadata EXIF, dan dihapus saat form dihapus.
 - Opsional retensi file (hari) di menu Pengaturan; `0` = simpan sampai form dihapus.
 
+## Deploy ke Cloudflare Pages
+
+Branch `cloudflare-pages` berisi versi yang berjalan sepenuhnya di Cloudflare:
+
+- Pages (static) + Pages Functions (Hono)
+- D1 untuk database
+- R2 untuk foto
+- Realtime via polling 5 detik
+- Kompresi foto di browser
+
+Panduan lengkap: [`DEPLOY-CLOUDFLARE.md`](./DEPLOY-CLOUDFLARE.md)
+
 ## Catatan
 
 - `node:sqlite` masih ditandai eksperimental oleh Node, tetapi stabil untuk penggunaan lokal.

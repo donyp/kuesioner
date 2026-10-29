@@ -18,6 +18,28 @@ function loadTurnstile() {
   return tsPromise;
 }
 
+async function compressImage(file, maxDim = 1920, quality = 0.82) {
+  if (!file.type.startsWith('image/')) return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
+    const w = Math.round(bitmap.width * scale);
+    const h = Math.round(bitmap.height * scale);
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    bitmap.close?.();
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', quality));
+    if (!blob) return file;
+    const name = file.name.replace(/\.[^.]+$/, '') + '.webp';
+    return new File([blob], name, { type: 'image/webp' });
+  } catch {
+    return file;
+  }
+}
+
 export default function PublicForm() {
   const { slug } = useParams();
   const { data: form, isLoading, isError } = useQuery({
@@ -174,9 +196,17 @@ export default function PublicForm() {
                   <div className="mt-2">
                     <label className="flex items-center gap-2 btn btn-ghost cursor-pointer w-fit">
                       <Upload size={14} /> {file && fileQid === q.id ? file.name : 'Pilih foto (max 5MB)'}
-                      <input type="file" accept="image/*" className="hidden" onChange={e => {
+                      <input type="file" accept="image/*" className="hidden" onChange={async e => {
                         const f = e.target.files?.[0];
-                        if (f) { setFile(f); setFileQid(q.id); }
+                        if (!f) return;
+                        if (f.size > 5 * 1024 * 1024) {
+                          setError('Foto maksimal 5MB');
+                          return;
+                        }
+                        setError('');
+                        const compressed = await compressImage(f);
+                        setFile(compressed);
+                        setFileQid(q.id);
                       }} />
                     </label>
                     {file && fileQid === q.id && (

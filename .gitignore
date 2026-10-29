@@ -6,4 +6,6 @@ storage/uploads/*
 .env
 client/dist
 server/dist
+.wrangler/
+.dev.vars
 *.log
