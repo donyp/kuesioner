@@ -11,24 +11,36 @@ function isHttps(c) {
 }
 
 auth.post('/login', async (c) => {
-  const body = await c.req.json().catch(() => null);
-  const parsed = z.object({ username: z.string().min(1), password: z.string().min(1) }).safeParse(body);
-  if (!parsed.success) return c.json({ error: 'Invalid input' }, 400);
+  try {
+    const body = await c.req.json().catch(() => null);
+    if (!body) {
+      return c.json({ error: 'Invalid request body' }, 400);
+    }
+    
+    const parsed = z.object({ username: z.string().min(1), password: z.string().min(1) }).safeParse(body);
+    if (!parsed.success) {
+      return c.json({ error: 'Invalid input: username and password required' }, 400);
+    }
 
-  const admin = await first(c, 'SELECT * FROM admins WHERE username = ?', parsed.data.username);
-  if (!admin) return c.json({ error: 'Invalid credentials' }, 401);
-  const ok = await verifyPassword(parsed.data.password, admin.password_hash);
-  if (!ok) return c.json({ error: 'Invalid credentials' }, 401);
+    const admin = await first(c, 'SELECT * FROM admins WHERE username = ?', parsed.data.username);
+    if (!admin) return c.json({ error: 'Invalid credentials' }, 401);
+    
+    const ok = await verifyPassword(parsed.data.password, admin.password_hash);
+    if (!ok) return c.json({ error: 'Invalid credentials' }, 401);
 
-  const token = await signToken(c, admin);
-  setCookie(c, 'token', token, {
-    httpOnly: true,
-    sameSite: 'Lax',
-    path: '/',
-    maxAge: 7 * 86400,
-    secure: isHttps(c),
-  });
-  return c.json({ ok: true, username: admin.username });
+    const token = await signToken(c, admin);
+    setCookie(c, 'token', token, {
+      httpOnly: true,
+      sameSite: 'Lax',
+      path: '/',
+      maxAge: 7 * 86400,
+      secure: isHttps(c),
+    });
+    return c.json({ ok: true, username: admin.username });
+  } catch (err) {
+    console.error('Login error:', err);
+    return c.json({ error: 'Internal server error' }, 500);
+  }
 });
 
 auth.post('/logout', async (c) => {

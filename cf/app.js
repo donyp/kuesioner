@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import auth from './routes/auth.js';
 import forms from './routes/forms.js';
 import questions from './routes/questions.js';
@@ -10,6 +11,20 @@ import settings from './routes/settings.js';
 import files from './routes/files.js';
 
 const app = new Hono();
+
+// Add CORS middleware
+app.use('*', cors({
+  origin: '*',
+  allowHeaders: ['Content-Type', 'Authorization'],
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true,
+}));
+
+// Add JSON body parsing middleware
+app.use('*', async (c, next) => {
+  // Hono parses JSON automatically for JSON requests
+  await next();
+});
 
 app.get('/api/health', (c) => c.json({ ok: true, runtime: 'cloudflare-pages' }));
 
