@@ -11,19 +11,32 @@ import files from './routes/files.js';
 
 const app = new Hono();
 
-// Simple manual CORS handling
+// Bulletproof CORS middleware
 app.use('*', async (c, next) => {
-  const origin = c.req.header('origin') || c.req.header('Origin') || '*';
-  c.header('Access-Control-Allow-Origin', origin);
-  c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-  c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  c.header('Access-Control-Allow-Credentials', 'true');
-  
-  if (c.req.method === 'OPTIONS') {
-    return c.text('OK', 200);
+  try {
+    const origin = (c.req.header('origin') || c.req.header('Origin') || c.req.header('ORIGIN') || '').toString();
+    
+    // Set CORS headers
+    if (origin) {
+      c.header('Access-Control-Allow-Origin', origin);
+    } else {
+      c.header('Access-Control-Allow-Origin', '*');
+    }
+    c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    c.header('Access-Control-Allow-Credentials', 'true');
+    c.header('Access-Control-Max-Age', '86400');
+    
+    // Handle OPTIONS request
+    if (c.req.method === 'OPTIONS') {
+      return c.text('OK', 200);
+    }
+    
+    await next();
+  } catch (e) {
+    console.error('[CORS_MIDDLEWARE] Error:', e?.message);
+    return c.json({ error: 'Middleware error: ' + (e?.message || 'unknown') }, 500);
   }
-  
-  await next();
 });
 
 app.get('/api/health', (c) => c.json({ ok: true, runtime: 'cloudflare-pages' }));
@@ -56,8 +69,17 @@ app.route('/api', files);
 app.notFound((c) => c.json({ error: 'Not found' }, 404));
 
 app.onError((err, c) => {
-  console.error(err);
-  return c.json({ error: 'Internal Server Error' }, 500);
+  console.error('[ERROR] Unhandled exception:');
+  console.error('[ERROR] Message:', err?.message);
+  console.error('[ERROR] Stack:', err?.stack);
+  console.error('[ERROR] Full error:', JSON.stringify(err, null, 2));
+  console.error('[ERROR] Type:', typeof err);
+  
+  return c.json({ 
+    error: 'Internal Server Error',
+    details: err?.message || 'Unknown error',
+    type: err?.constructor?.name || 'Unknown'
+  }, 500);
 });
 
 export default app;

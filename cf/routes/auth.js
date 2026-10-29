@@ -12,45 +12,32 @@ function isHttps(c) {
 
 auth.post('/login', async (c) => {
   try {
-    console.log('[LOGIN] Request received, method:', c.req.method);
+    console.log('[LOGIN] ===== LOGIN REQUEST START =====');
+    console.log('[LOGIN] Env keys:', Object.keys(c.env || {}));
+    console.log('[LOGIN] Env.DB:', !!c.env?.DB);
+    console.log('[LOGIN] Env.JWT_SECRET:', !!c.env?.JWT_SECRET);
     
     const body = await c.req.json().catch((err) => {
-      console.log('[LOGIN] JSON parse error:', err.message);
+      console.error('[LOGIN] JSON parse failed:', err.message);
       return null;
     });
-    console.log('[LOGIN] Body:', JSON.stringify(body));
     
     if (!body) {
-      console.log('[LOGIN] Empty body');
       return c.json({ error: 'Invalid request body' }, 400);
     }
     
     const parsed = z.object({ username: z.string().min(1), password: z.string().min(1) }).safeParse(body);
     if (!parsed.success) {
-      console.log('[LOGIN] Validation failed:', parsed.error.errors);
       return c.json({ error: 'Invalid input: username and password required' }, 400);
     }
 
-    console.log('[LOGIN] Looking up user:', parsed.data.username);
-    console.log('[LOGIN] c.env.DB type:', typeof c.env?.DB);
-    
     const admin = await first(c, 'SELECT * FROM admins WHERE username = ?', parsed.data.username);
-    console.log('[LOGIN] Admin found:', !!admin);
-    
     if (!admin) return c.json({ error: 'Invalid credentials' }, 401);
     
-    console.log('[LOGIN] Admin data:', admin);
-    console.log('[LOGIN] Password hash type:', typeof admin?.password_hash);
-    console.log('[LOGIN] Verifying password');
-    
     const ok = await verifyPassword(parsed.data.password, admin.password_hash);
-    console.log('[LOGIN] Password ok:', ok);
-    
     if (!ok) return c.json({ error: 'Invalid credentials' }, 401);
 
-    console.log('[LOGIN] Signing token');
     const token = await signToken(c, admin);
-    console.log('[LOGIN] Token signed, length:', token.length);
     
     setCookie(c, 'token', token, {
       httpOnly: true,
@@ -61,9 +48,12 @@ auth.post('/login', async (c) => {
     });
     return c.json({ ok: true, username: admin.username });
   } catch (err) {
-    console.error('[LOGIN] Exception:', err.message);
-    console.error('[LOGIN] Stack:', err.stack);
-    return c.json({ error: 'Internal server error: ' + err.message }, 500);
+    console.error('[LOGIN] CATCH BLOCK - Exception:', err?.message);
+    console.error('[LOGIN] Stack:', err?.stack);
+    console.error('[LOGIN] Full error:', err);
+    return c.json({ error: 'Internal server error: ' + (err?.message || 'Unknown error') }, 500);
+  } finally {
+    console.log('[LOGIN] ===== LOGIN REQUEST END =====');
   }
 });
 
