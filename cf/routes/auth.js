@@ -12,23 +12,41 @@ function isHttps(c) {
 
 auth.post('/login', async (c) => {
   try {
-    const body = await c.req.json().catch(() => null);
+    console.log('[LOGIN] Request received');
+    
+    const body = await c.req.json().catch((err) => {
+      console.log('[LOGIN] JSON parse error:', err.message);
+      return null;
+    });
+    console.log('[LOGIN] Body:', body);
+    
     if (!body) {
+      console.log('[LOGIN] Empty body');
       return c.json({ error: 'Invalid request body' }, 400);
     }
     
     const parsed = z.object({ username: z.string().min(1), password: z.string().min(1) }).safeParse(body);
     if (!parsed.success) {
+      console.log('[LOGIN] Validation failed:', parsed.error.errors);
       return c.json({ error: 'Invalid input: username and password required' }, 400);
     }
 
+    console.log('[LOGIN] Looking up user:', parsed.data.username);
     const admin = await first(c, 'SELECT * FROM admins WHERE username = ?', parsed.data.username);
+    console.log('[LOGIN] Admin found:', !!admin);
+    
     if (!admin) return c.json({ error: 'Invalid credentials' }, 401);
     
+    console.log('[LOGIN] Verifying password');
     const ok = await verifyPassword(parsed.data.password, admin.password_hash);
+    console.log('[LOGIN] Password ok:', ok);
+    
     if (!ok) return c.json({ error: 'Invalid credentials' }, 401);
 
+    console.log('[LOGIN] Signing token');
     const token = await signToken(c, admin);
+    console.log('[LOGIN] Token signed');
+    
     setCookie(c, 'token', token, {
       httpOnly: true,
       sameSite: 'Lax',
@@ -38,8 +56,8 @@ auth.post('/login', async (c) => {
     });
     return c.json({ ok: true, username: admin.username });
   } catch (err) {
-    console.error('Login error:', err);
-    return c.json({ error: 'Internal server error' }, 500);
+    console.error('[LOGIN] Exception:', err.message, err.stack);
+    return c.json({ error: 'Internal server error: ' + err.message }, 500);
   }
 });
 

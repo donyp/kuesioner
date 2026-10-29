@@ -28,6 +28,32 @@ app.use('*', async (c, next) => {
 
 app.get('/api/health', (c) => c.json({ ok: true, runtime: 'cloudflare-pages' }));
 
+// Debug endpoint
+app.get('/api/debug', async (c) => {
+  try {
+    const hasJwt = !!c.env.JWT_SECRET;
+    const hasDb = !!c.env.DB;
+    let dbTest = 'not tested';
+    
+    if (hasDb) {
+      try {
+        const res = await c.env.DB.prepare('SELECT COUNT(*) as count FROM admins;').first();
+        dbTest = `Success: ${res?.count || 0} admins found`;
+      } catch (err) {
+        dbTest = `Error: ${err.message}`;
+      }
+    }
+    
+    return c.json({
+      jwt_secret: hasJwt ? 'configured' : 'MISSING',
+      db: hasDb ? 'configured' : 'MISSING',
+      db_test: dbTest,
+    });
+  } catch (err) {
+    return c.json({ error: err.message }, 500);
+  }
+});
+
 app.route('/api/auth', auth);
 app.route('/api/forms', forms);
 app.route('/api/forms', questions);
