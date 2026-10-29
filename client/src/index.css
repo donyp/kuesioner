@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: dark; }
+
+body {
+  background: #0B0D12;
+  background-image:
+    radial-gradient(1200px 600px at 20% -10%, rgba(124,92,252,0.12), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, rgba(59,130,246,0.08), transparent 60%);
+  min-height: 100vh;
+}
+
+/* subtle grid */
+.bg-grid {
+  background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.card {
+  background: #161922;
+  border: 1px solid #232633;
+  border-radius: 12px;
+}
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 16px; border-radius: 10px; font-weight: 500; font-size: 14px;
+  transition: all 150ms ease; border: 1px solid transparent;
+}
+.btn-primary { background: linear-gradient(135deg,#7C5CFC,#5B3FD9); color: #fff; }
+.btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+.btn-ghost { background: transparent; color: #E6E8EE; border-color: #232633; }
+.btn-ghost:hover { background: #1C1F2A; }
+.btn-danger { background: #DC2626; color: #fff; }
+
+.input {
+  width: 100%; padding: 10px 12px; border-radius: 10px;
+  background: #0F1117; border: 1px solid #232633; color: #E6E8EE; font-size: 14px;
+  transition: border-color 150ms ease;
+}
+.input:focus { outline: none; border-color: #7C5CFC; box-shadow: 0 0 0 3px rgba(124,92,252,0.15); }
+
+.skeleton { background: linear-gradient(90deg,#161922 25%,#1C1F2A 50%,#161922 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+.fade-in { animation: fadeIn 200ms ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px);} to { opacity:1; transform: none;} }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #232633; border-radius: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
