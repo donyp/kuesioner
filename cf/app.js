@@ -14,7 +14,7 @@ const app = new Hono();
 
 // Add CORS middleware
 app.use('*', cors({
-  origin: '*',
+  origin: (origin) => origin || '*',
   allowHeaders: ['Content-Type', 'Authorization'],
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
