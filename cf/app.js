@@ -1,5 +1,4 @@
 import { Hono } from 'hono';
-import { cors } from 'hono/cors';
 import auth from './routes/auth.js';
 import forms from './routes/forms.js';
 import questions from './routes/questions.js';
@@ -12,17 +11,18 @@ import files from './routes/files.js';
 
 const app = new Hono();
 
-// Add CORS middleware
-app.use('*', cors({
-  origin: (origin) => origin || '*',
-  allowHeaders: ['Content-Type', 'Authorization'],
-  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  credentials: true,
-}));
-
-// Add JSON body parsing middleware
+// Simple manual CORS handling
 app.use('*', async (c, next) => {
-  // Hono parses JSON automatically for JSON requests
+  const origin = c.req.header('origin') || c.req.header('Origin') || '*';
+  c.header('Access-Control-Allow-Origin', origin);
+  c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  c.header('Access-Control-Allow-Credentials', 'true');
+  
+  if (c.req.method === 'OPTIONS') {
+    return c.text('OK', 200);
+  }
+  
   await next();
 });
 
