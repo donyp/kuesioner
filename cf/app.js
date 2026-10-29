@@ -28,26 +28,15 @@ app.use('*', async (c, next) => {
 
 app.get('/api/health', (c) => c.json({ ok: true, runtime: 'cloudflare-pages' }));
 
-// Debug endpoint
-app.get('/api/debug', async (c) => {
+// Debug endpoint - check what's available in context
+app.get('/api/debug/env', async (c) => {
   try {
-    const hasJwt = !!c.env.JWT_SECRET;
-    const hasDb = !!c.env.DB;
-    let dbTest = 'not tested';
-    
-    if (hasDb) {
-      try {
-        const res = await c.env.DB.prepare('SELECT COUNT(*) as count FROM admins;').first();
-        dbTest = `Success: ${res?.count || 0} admins found`;
-      } catch (err) {
-        dbTest = `Error: ${err.message}`;
-      }
-    }
-    
+    const keys = Object.keys(c.env || {});
     return c.json({
-      jwt_secret: hasJwt ? 'configured' : 'MISSING',
-      db: hasDb ? 'configured' : 'MISSING',
-      db_test: dbTest,
+      env_keys: keys,
+      has_db: !!c.env.DB,
+      has_jwt: !!c.env.JWT_SECRET,
+      env_type: typeof c.env,
     });
   } catch (err) {
     return c.json({ error: err.message }, 500);
