@@ -41,6 +41,26 @@ app.use('*', async (c, next) => {
 
 app.get('/api/health', (c) => c.json({ ok: true, runtime: 'cloudflare-pages' }));
 
+// Minimal test login without any dependencies
+app.post('/api/test-login', async (c) => {
+  try {
+    console.log('[TEST] Starting test login');
+    console.log('[TEST] c.env:', typeof c.env);
+    console.log('[TEST] c.env.DB:', typeof c.env?.DB);
+    console.log('[TEST] c.env.JWT_SECRET:', typeof c.env?.JWT_SECRET);
+    
+    return c.json({ 
+      test: 'ok',
+      hasDB: !!c.env?.DB,
+      hasJWT: !!c.env?.JWT_SECRET,
+      envKeys: Object.keys(c.env || {})
+    });
+  } catch (err) {
+    console.error('[TEST] Error:', err);
+    return c.json({ error: err.message, stack: err.stack }, 500);
+  }
+});
+
 // Debug endpoint - check what's available in context
 app.get('/api/debug/env', async (c) => {
   try {
