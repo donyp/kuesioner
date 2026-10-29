@@ -61,10 +61,16 @@ export default function FormBuilder() {
     const target = idx + dir;
     if (target < 0 || target >= qs.length) return;
     [qs[idx], qs[target]] = [qs[target], qs[idx]];
-    formsApi.reorder(id, qs.map(q => q.id)).then(() => qc.invalidateQueries({ queryKey: ['form', id] }));
+    formsApi.reorder(id, qs.map(q => q.id))
+      .then(() => qc.invalidateQueries({ queryKey: ['form', id] }))
+      .catch(err => console.error('Error reordering:', err));
   };
 
-  const updateQ = (qid, data) => formsApi.updateQuestion(id, qid, data).then(() => qc.invalidateQueries({ queryKey: ['form', id] }));
+  const updateQ = (qid, data) => {
+    return formsApi.updateQuestion(id, qid, data)
+      .then(() => qc.invalidateQueries({ queryKey: ['form', id] }))
+      .catch(err => console.error('Error updating question:', err));
+  };
 
   if (isLoading) return <div className="text-muted">Memuat...</div>;
   if (!form) return <div className="text-muted">Form tidak ditemukan</div>;
@@ -118,9 +124,31 @@ export default function FormBuilder() {
         {(form.questions || []).map((q, idx) => (
           <div key={q.id} className="card p-4 flex gap-3 items-start">
             <div className="flex flex-col gap-1 pt-1">
-              <button onClick={() => moveQ(idx, -1)} className="text-muted hover:text-text"><ChevronUp size={14} /></button>
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Move up clicked:', idx);
+                  moveQ(idx, -1);
+                }} 
+                className="text-muted hover:text-text cursor-pointer"
+                type="button"
+              >
+                <ChevronUp size={14} />
+              </button>
               <GripVertical size={14} className="text-muted" />
-              <button onClick={() => moveQ(idx, 1)} className="text-muted hover:text-text"><ChevronDown size={14} /></button>
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Move down clicked:', idx);
+                  moveQ(idx, 1);
+                }} 
+                className="text-muted hover:text-text cursor-pointer"
+                type="button"
+              >
+                <ChevronDown size={14} />
+              </button>
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
@@ -130,11 +158,23 @@ export default function FormBuilder() {
               <input
                 className="input mb-2"
                 defaultValue={q.title}
-                onBlur={e => { if (e.target.value !== q.title) updateQ(q.id, { title: e.target.value }); }}
+                onBlur={e => { 
+                  if (e.target.value !== q.title) {
+                    console.log('Updating question title:', q.id, e.target.value);
+                    updateQ(q.id, { title: e.target.value });
+                  }
+                }}
               />
               {q.type !== 'section' && (
-                <label className="flex items-center gap-2 text-xs text-muted">
-                  <input type="checkbox" checked={!!q.required} onChange={e => updateQ(q.id, { required: e.target.checked })} />
+                <label className="flex items-center gap-2 text-xs text-muted cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={!!q.required} 
+                    onChange={e => {
+                      console.log('Toggling required:', q.id, e.target.checked);
+                      updateQ(q.id, { required: e.target.checked });
+                    }} 
+                  />
                   Wajib diisi
                 </label>
               )}
@@ -143,23 +183,53 @@ export default function FormBuilder() {
                   <div className="text-xs text-muted mb-1">Opsi (pisahkan enter):</div>
                   <textarea className="input text-xs" rows={3}
                     defaultValue={(q.options || []).join('\n')}
-                    onBlur={e => updateQ(q.id, { options: e.target.value.split('\n').map(s=>s.trim()).filter(Boolean) })} />
+                    onBlur={e => {
+                      const newOptions = e.target.value.split('\n').map(s=>s.trim()).filter(Boolean);
+                      console.log('Updating options:', q.id, newOptions);
+                      updateQ(q.id, { options: newOptions });
+                    }} 
+                  />
                 </div>
               )}
               {q.type === 'linear_scale' && (
                 <div className="mt-2 flex gap-2">
                   <input type="number" className="input text-xs w-20" placeholder="min" defaultValue={q.validation?.min ?? 1}
-                    onBlur={e => updateQ(q.id, { validation: { ...q.validation, min: Number(e.target.value) } })} />
+                    onBlur={e => {
+                      console.log('Updating scale min:', q.id, e.target.value);
+                      updateQ(q.id, { validation: { ...q.validation, min: Number(e.target.value) } });
+                    }} 
+                  />
                   <input type="number" className="input text-xs w-20" placeholder="max" defaultValue={q.validation?.max ?? 5}
-                    onBlur={e => updateQ(q.id, { validation: { ...q.validation, max: Number(e.target.value) } })} />
+                    onBlur={e => {
+                      console.log('Updating scale max:', q.id, e.target.value);
+                      updateQ(q.id, { validation: { ...q.validation, max: Number(e.target.value) } });
+                    }} 
+                  />
                   <input className="input text-xs flex-1" placeholder="label min" defaultValue={q.validation?.labelMin ?? ''}
-                    onBlur={e => updateQ(q.id, { validation: { ...q.validation, labelMin: e.target.value } })} />
+                    onBlur={e => {
+                      console.log('Updating scale labelMin:', q.id, e.target.value);
+                      updateQ(q.id, { validation: { ...q.validation, labelMin: e.target.value } });
+                    }} 
+                  />
                   <input className="input text-xs flex-1" placeholder="label max" defaultValue={q.validation?.labelMax ?? ''}
-                    onBlur={e => updateQ(q.id, { validation: { ...q.validation, labelMax: e.target.value } })} />
+                    onBlur={e => {
+                      console.log('Updating scale labelMax:', q.id, e.target.value);
+                      updateQ(q.id, { validation: { ...q.validation, labelMax: e.target.value } });
+                    }} 
+                  />
                 </div>
               )}
             </div>
-            <button onClick={() => { if (confirm('Hapus pertanyaan?')) delQ.mutate(q.id); }} className="text-muted hover:text-red-400">
+            <button 
+              onClick={() => { 
+                console.log('Delete button clicked for question:', q.id);
+                if (confirm('Hapus pertanyaan?')) {
+                  console.log('Deleting question:', q.id);
+                  delQ.mutate(q.id);
+                }
+              }} 
+              className="text-muted hover:text-red-400"
+            >
               <Trash2 size={16} />
             </button>
           </div>
