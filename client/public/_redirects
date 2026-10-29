@@ -1,5 +1,11 @@
-# SPA fallback only. Do not use /* here: it also rewrites /assets/* to index.html.
+# SPA fallback rules
+# Rewrite SPA routes to index.html without changing URL
 /login /index.html 200
 /settings /index.html 200
+/dashboard /index.html 200
+/forms /index.html 200
+/responses /index.html 200
+
+# Catch nested SPA routes (forms/:id, f/:slug)
 /forms/* /index.html 200
 /f/* /index.html 200
