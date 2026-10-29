@@ -1,0 +1,18 @@
+name = "kuesioner"
+compatibility_date = "2025-10-01"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = "client/dist"
+
+# Ganti database_id dengan hasil `npx wrangler d1 create kuesioner-db`
+[[d1_databases]]
+binding = "DB"
+database_name = "kuesioner-db"
+database_id = "00000000-0000-0000-0000-000000000000"
+
+# Ganti dengan hasil `npx wrangler r2 bucket create kuesioner-uploads`
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "kuesioner-uploads"
+
+[vars]
+MAX_UPLOAD_MB = "5"

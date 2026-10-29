@@ -13,21 +13,15 @@ export default function FormStats() {
   const [stats, setStats] = useState(null);
 
   useEffect(() => {
-    let es;
     let cancelled = false;
-    formsApi.stats(id).then(r => { if (!cancelled) setStats(r.data); });
-    try {
-      es = new EventSource(`/api/forms/${id}/stats/stream`, { withCredentials: true });
-      es.onmessage = (e) => {
-        try { setStats(JSON.parse(e.data)); } catch {}
-      };
-      es.onerror = () => { /* fallback polling */ };
-    } catch {}
-    // fallback polling
-    const poll = setInterval(() => {
-      formsApi.stats(id).then(r => { if (!cancelled) setStats(r.data); }).catch(() => {});
-    }, 8000);
-    return () => { cancelled = true; if (es) es.close(); clearInterval(poll); };
+    const load = () => {
+      formsApi.stats(id)
+        .then(r => { if (!cancelled) setStats(r.data); })
+        .catch(() => {});
+    };
+    load();
+    const poll = setInterval(load, 5000);
+    return () => { cancelled = true; clearInterval(poll); };
   }, [id]);
 
   if (!stats) return <div className="text-muted">Memuat statistik...</div>;
@@ -42,10 +36,10 @@ export default function FormStats() {
       <div className="flex items-center gap-3 mb-1">
         <h1 className="text-2xl font-semibold">{form?.title}</h1>
         <span className="flex items-center gap-1.5 text-xs text-green-400 border border-green-500/30 bg-green-500/10 rounded-full px-2 py-0.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" /> Live
+          <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" /> Live · 5s
         </span>
       </div>
-      <p className="text-sm text-muted mb-6">Statistik real-time (SSE)</p>
+      <p className="text-sm text-muted mb-6">Statistik diperbarui otomatis setiap 5 detik</p>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         <StatCard label="Total Respons" value={stats.total} />

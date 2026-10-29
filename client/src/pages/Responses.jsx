@@ -49,7 +49,7 @@ export default function Responses() {
             {s.files?.length > 0 && (
               <div className="mt-3 flex gap-2 flex-wrap">
                 {s.files.map(f => (
-                  <a key={f.id} href={`/uploads/${f.path.split('/').pop()}`} target="_blank" rel="noreferrer"
+                  <a key={f.id} href={`/api/files/${f.id}`} target="_blank" rel="noreferrer"
                     className="flex items-center gap-1 text-xs text-accent hover:underline">
                     <ImageIcon size={12} /> Lihat foto
                   </a>

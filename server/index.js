@@ -33,6 +33,7 @@ import submissionRoutes from './routes/submissions.js';
 import statsRoutes from './routes/stats.js';
 import exportRoutes from './routes/export.js';
 import settingsRoutes from './routes/settings.js';
+import fileRoutes from './routes/files.js';
 
 await app.register(authRoutes, { prefix: '/api/auth' });
 await app.register(formRoutes, { prefix: '/api/forms' });
@@ -42,6 +43,7 @@ await app.register(submissionRoutes, { prefix: '/api' });
 await app.register(statsRoutes, { prefix: '/api' });
 await app.register(exportRoutes, { prefix: '/api' });
 await app.register(settingsRoutes, { prefix: '/api/settings' });
+await app.register(fileRoutes, { prefix: '/api' });
 
 // static uploads
 import fsSync from 'node:fs';
