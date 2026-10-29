@@ -7,7 +7,7 @@ pages_build_output_dir = "client/dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "kuesioner-db"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "5f69a4e5-ba3f-4b07-a15b-1ab126f54079"
 
 # Ganti dengan hasil `npx wrangler r2 bucket create kuesioner-uploads`
 [[r2_buckets]]
