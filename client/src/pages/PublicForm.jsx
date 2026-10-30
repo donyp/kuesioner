@@ -104,6 +104,7 @@ export default function PublicForm() {
           <CheckCircle2 size={48} className="mx-auto text-green-400 mb-4" />
           <h1 className="text-2xl font-semibold mb-2">Terima kasih!</h1>
           <p className="text-muted">Jawaban Anda telah terkirim. Data pengisi tidak disimpan.</p>
+          <p className="text-xs text-muted mt-4">Form oleh Anka - Aneka Aksesoris (Supplier &amp; Fabrikasi)</p>
         </div>
       </div>
     );
@@ -115,6 +116,7 @@ export default function PublicForm() {
     <div className="min-h-screen py-10 px-4">
       <div className="max-w-2xl mx-auto">
         <div className="card p-8 mb-6 fade-in" style={{ borderTop: `3px solid ${accent}` }}>
+          <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Anka - Aneka Aksesoris · Supplier &amp; Fabrikasi</p>
           <h1 className="text-2xl font-semibold">{form.title}</h1>
           {form.description && <p className="text-muted mt-2 text-sm">{form.description}</p>}
         </div>
@@ -249,6 +251,9 @@ export default function PublicForm() {
 
         <p className="text-xs text-muted text-center mt-6">
           Privasi: data pengisi (nama, IP, dll) tidak disimpan. Hanya jawaban yang direkam.
+        </p>
+        <p className="text-xs text-center mt-4 text-muted">
+          Form ini dibuat oleh <span className="font-semibold text-text">Anka - Aneka Aksesoris</span> (Supplier &amp; Fabrikasi)
         </p>
       </div>
     </div>
