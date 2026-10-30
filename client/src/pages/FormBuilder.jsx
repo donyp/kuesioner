@@ -36,9 +36,11 @@ export default function FormBuilder() {
     }
   }, [form]);
 
+  const [saveMsg, setSaveMsg] = useState('');
   const saveForm = useMutation({
     mutationFn: () => formsApi.update(id, { title, description, slug, status, accent_color: accent }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['form', id] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['form', id] }); setSaveMsg('Tersimpan'); setTimeout(() => setSaveMsg(''), 2000); },
+    onError: (e) => { setSaveMsg(e.response?.data?.error || 'Gagal menyimpan'); setTimeout(() => setSaveMsg(''), 3000); },
   });
 
   const addQ = useMutation({
@@ -81,7 +83,10 @@ export default function FormBuilder() {
         <Link to="/" className="flex items-center gap-2 text-muted hover:text-text text-sm"><ArrowLeft size={16} /> Kembali</Link>
         <div className="flex gap-2">
           <a href={`/f/${form.slug}`} target="_blank" rel="noreferrer" className="btn btn-ghost text-sm"><Eye size={14} /> Preview</a>
-          <button onClick={() => saveForm.mutate()} className="btn btn-primary text-sm"><Save size={14} /> Simpan</button>
+          {saveMsg && <span className="text-xs text-green-400 self-center">{saveMsg}</span>}
+          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); saveForm.mutate(); }} disabled={saveForm.isPending} className="btn btn-primary text-sm" type="button">
+            <Save size={14} /> {saveForm.isPending ? 'Menyimpan...' : 'Simpan'}
+          </button>
         </div>
       </div>
 
@@ -117,7 +122,7 @@ export default function FormBuilder() {
 
       <div className="flex items-center justify-between mb-3">
         <h2 className="font-semibold">Pertanyaan ({form.questions?.length || 0})</h2>
-        <button onClick={() => { console.log('Add button clicked'); setShowAdd(true); }} className="btn btn-primary text-sm"><Plus size={14} /> Tambah</button>
+        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAdd(true); }} className="btn btn-primary text-sm" type="button"><Plus size={14} /> Tambah</button>
       </div>
 
       <div className="space-y-3">
@@ -127,10 +132,10 @@ export default function FormBuilder() {
             question={q} 
             idx={idx} 
             totalQuestions={form.questions?.length || 0}
-            onMoveUp={() => { console.log('Move up:', idx); moveQ(idx, -1); }}
-            onMoveDown={() => { console.log('Move down:', idx); moveQ(idx, 1); }}
+            onMoveUp={() => moveQ(idx, -1)}
+            onMoveDown={() => moveQ(idx, 1)}
             onUpdate={(data) => updateQ(q.id, data)}
-            onDelete={() => { console.log('Delete:', q.id); if (confirm('Hapus pertanyaan?')) delQ.mutate(q.id); }}
+            onDelete={() => { if (confirm('Hapus pertanyaan?')) delQ.mutate(q.id); }}
           />
         ))}
       </div>
@@ -158,8 +163,8 @@ function QuestionCard({ question: q, idx, totalQuestions, onMoveUp, onMoveDown, 
     <div className="card p-4">
       <div className="flex gap-3 items-start">
         <div className="flex flex-col gap-1 pt-1 shrink-0" style={{ minWidth: '30px' }}>
-          <button 
-            onClick={onMoveUp}
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onMoveUp(); }}
             className="text-muted hover:text-text cursor-pointer p-1 hover:bg-white/5 rounded disabled:opacity-30"
             type="button"
             disabled={idx === 0}
@@ -168,8 +173,8 @@ function QuestionCard({ question: q, idx, totalQuestions, onMoveUp, onMoveDown, 
             <ChevronUp size={14} />
           </button>
           <GripVertical size={14} className="text-muted mx-auto" />
-          <button 
-            onClick={onMoveDown}
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onMoveDown(); }}
             className="text-muted hover:text-text cursor-pointer p-1 hover:bg-white/5 rounded disabled:opacity-30"
             type="button"
             disabled={idx === totalQuestions - 1}
@@ -187,9 +192,8 @@ function QuestionCard({ question: q, idx, totalQuestions, onMoveUp, onMoveDown, 
           <input
             className="input mb-2"
             defaultValue={q.title}
-            onBlur={e => { 
+            onBlur={e => {
               if (e.target.value !== q.title) {
-                console.log('Updating title:', q.id, e.target.value);
                 onUpdate({ title: e.target.value });
               }
             }}
@@ -200,7 +204,6 @@ function QuestionCard({ question: q, idx, totalQuestions, onMoveUp, onMoveDown, 
                 type="checkbox" 
                 checked={!!q.required} 
                 onChange={e => {
-                  console.log('Toggle required:', q.id, e.target.checked);
                   onUpdate({ required: e.target.checked });
                 }} 
               />
@@ -214,7 +217,6 @@ function QuestionCard({ question: q, idx, totalQuestions, onMoveUp, onMoveDown, 
                 defaultValue={(q.options || []).join('\n')}
                 onBlur={e => {
                   const newOptions = e.target.value.split('\n').map(s=>s.trim()).filter(Boolean);
-                  console.log('Updating options:', q.id);
                   onUpdate({ options: newOptions });
                 }} 
               />
@@ -234,8 +236,8 @@ function QuestionCard({ question: q, idx, totalQuestions, onMoveUp, onMoveDown, 
           )}
         </div>
         
-        <button 
-          onClick={onDelete}
+        <button
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(); }}
           className="text-muted hover:text-red-400 cursor-pointer p-2 hover:bg-red-500/10 rounded shrink-0"
           type="button"
           title="Delete question"
@@ -288,8 +290,8 @@ function AddQuestionModal({ newQ, setNewQ, optionInput, setOptionInput, onClose,
           </label>
         </div>
         <div className="flex gap-2 justify-end mt-5">
-          <button onClick={onClose} className="btn btn-ghost">Batal</button>
-          <button onClick={onAdd} disabled={!newQ.title.trim() || isPending} className="btn btn-primary">
+          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onClose(); }} className="btn btn-ghost" type="button">Batal</button>
+          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(); }} disabled={!newQ.title.trim() || isPending} className="btn btn-primary" type="button">
             {isPending ? 'Menambah...' : 'Tambah'}
           </button>
         </div>
